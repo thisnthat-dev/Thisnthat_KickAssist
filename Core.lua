@@ -41,6 +41,23 @@ local INTERRUPT_SPELL_CHOICES = {
     "Wind Shear",
 }
 
+local INTERRUPT_SPELL_CLASS = {
+    ["Axe Toss"] = "WARLOCK",
+    ["Counter Shot"] = "HUNTER",
+    ["Counterspell"] = "MAGE",
+    ["Disrupt"] = "DEMONHUNTER",
+    ["Kick"] = "ROGUE",
+    ["Mind Freeze"] = "DEATHKNIGHT",
+    ["Pummel"] = "WARRIOR",
+    ["Quell"] = "EVOKER",
+    ["Rebuke"] = "PALADIN",
+    ["Silence"] = "PRIEST",
+    ["Skull Bash"] = "DRUID",
+    ["Spear Hand Strike"] = "MONK",
+    ["Spell Lock"] = "WARLOCK",
+    ["Wind Shear"] = "SHAMAN",
+}
+
 local RAID_MARKERS = {
     { index = 0, name = "None" },
     { index = 1, name = "Star" },
@@ -117,6 +134,40 @@ local function ClampMarkerIndex(index)
     end
 
     return marker
+end
+
+local function GetClassColorHex(classToken)
+    if type(classToken) ~= "string" or classToken == "" then
+        return nil
+    end
+
+    local classColors = rawget(_G, "CUSTOM_CLASS_COLORS") or rawget(_G, "RAID_CLASS_COLORS")
+    local color = classColors and classColors[classToken]
+    if type(color) ~= "table" then
+        return nil
+    end
+
+    if type(color.colorStr) == "string" and color.colorStr ~= "" then
+        local colorStr = color.colorStr
+        if string.sub(colorStr, 1, 2) ~= "ff" and string.sub(colorStr, 1, 2) ~= "FF" then
+            colorStr = "ff" .. colorStr
+        end
+        return string.lower(colorStr)
+    end
+
+    local r = math.floor(((tonumber(color.r) or 1) * 255) + 0.5)
+    local g = math.floor(((tonumber(color.g) or 1) * 255) + 0.5)
+    local b = math.floor(((tonumber(color.b) or 1) * 255) + 0.5)
+    return string.format("ff%02x%02x%02x", r, g, b)
+end
+
+local function ColorizeByClass(text, classToken)
+    local hex = GetClassColorHex(classToken)
+    if not hex then
+        return text
+    end
+
+    return "|c" .. hex .. tostring(text or "") .. "|r"
 end
 
 function Addon:Print(message)
@@ -270,12 +321,16 @@ function Addon:GetInterruptSpellName()
 end
 
 function Addon:GetInterruptSpellChoices()
+    local _, playerClassToken = UnitClass("player")
     local choices = {
-        { value = "AUTO", label = "Auto (Class Default)" },
+        { value = "AUTO", label = ColorizeByClass("Auto (Class Default)", playerClassToken) },
     }
 
     for _, spellName in ipairs(INTERRUPT_SPELL_CHOICES) do
-        choices[#choices + 1] = { value = spellName, label = spellName }
+        choices[#choices + 1] = {
+            value = spellName,
+            label = ColorizeByClass(spellName, INTERRUPT_SPELL_CLASS[spellName]),
+        }
     end
 
     return choices

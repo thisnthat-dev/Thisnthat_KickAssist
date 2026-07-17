@@ -2,7 +2,7 @@
 ## Title: Thisnthat Kick Assist
 ## Notes: Standalone kick coordination and macro helper.
 ## Author: Thisnthat
-## Version: 0.1.0
+## Version: 0.5.2
 ## SavedVariables: Thisnthat_KickAssistDB
 ## OptionalDeps: Blizzard_UIDropDownMenu
 
