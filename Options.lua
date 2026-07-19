@@ -278,8 +278,11 @@ local function BuildOptionsFrame()
     controls.createFocusButton = CreateActionButton(content, "Create TNT: Focus Macro", 200, 24)
     controls.createFocusButton:SetPoint("LEFT", controls.copyFocusButton, "RIGHT", 8, 0)
 
+    controls.focusMouseoverCheck = CreateCheckButton(content, "Use @mouseover in Focus + Mark macro")
+    controls.focusMouseoverCheck:SetPoint("TOPLEFT", controls.copyFocusButton, "BOTTOMLEFT", -2, -10)
+
     controls.announceCheck = CreateCheckButton(content, "Announce kick target in party on ready check")
-    controls.announceCheck:SetPoint("TOPLEFT", controls.copyFocusButton, "BOTTOMLEFT", -2, -24)
+    controls.announceCheck:SetPoint("TOPLEFT", controls.focusMouseoverCheck, "BOTTOMLEFT", 0, -14)
 
     local announceMessageLabel = CreateLabel(content, "Announcement Message", "GameFontNormalSmall", COLORS.text)
     announceMessageLabel:SetPoint("TOPLEFT", controls.announceCheck, "BOTTOMLEFT", 2, -18)
@@ -312,6 +315,20 @@ local function RefreshOptions()
     BuildOptionsFrame()
     local cfg = Addon:GetConfig()
 
+    local kickActionLabel = type(Addon.GetKickMacroActionLabel) == "function"
+        and Addon:GetKickMacroActionLabel()
+        or "Create TNT: Kick Macro"
+    if controls.createKickButton and controls.createKickButton.label then
+        controls.createKickButton.label:SetText(kickActionLabel)
+    end
+
+    local focusActionLabel = type(Addon.GetFocusMacroActionLabel) == "function"
+        and Addon:GetFocusMacroActionLabel()
+        or "Create TNT: Focus Macro"
+    if controls.createFocusButton and controls.createFocusButton.label then
+        controls.createFocusButton.label:SetText(focusActionLabel)
+    end
+
     SetDropdownValue(controls.markerDropDown, (function()
         local items = {}
         for _, marker in ipairs(Addon:GetRaidMarkers()) do
@@ -341,6 +358,7 @@ local function RefreshOptions()
     controls.heroicCheck:SetChecked(cfg.announceInHeroicDungeon)
     controls.normalCheck:SetChecked(cfg.announceInNormalDungeon)
     controls.minimapCheck:SetChecked(cfg.hideMinimapButton ~= true)
+    controls.focusMouseoverCheck:SetChecked(cfg.useMouseoverForFocusMacro ~= false)
 
     local markerTexture = Addon:GetMarkerTextureTag(cfg.markerIndex, 14)
     if markerTexture == "" then
@@ -374,12 +392,18 @@ function ns:OpenOptionsFrame()
     end)
     controls.createKickButton:SetScript("OnClick", function()
         Addon:CreateKickMacro()
+        RefreshOptions()
     end)
     controls.copyFocusButton:SetScript("OnClick", function()
         ShowCopyDialog("Copy Focus Macro", Addon:BuildFocusMacro())
     end)
     controls.createFocusButton:SetScript("OnClick", function()
         Addon:CreateFocusMacro()
+        RefreshOptions()
+    end)
+    controls.focusMouseoverCheck:SetScript("OnClick", function(self)
+        Addon:GetConfig().useMouseoverForFocusMacro = self:GetChecked() and true or false
+        RefreshOptions()
     end)
 
     controls.announceCheck:SetScript("OnClick", function(self)

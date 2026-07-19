@@ -85,6 +85,7 @@ local defaults = {
         minimapPos = 220,
     },
     interruptSpell = "AUTO",
+    useMouseoverForFocusMacro = true,
     announceOnReadyCheck = false,
     announceTemplate = "My Kick target is {RAIDMARKER}",
     announceInMythicPlus = true,
@@ -194,6 +195,11 @@ function Addon:GetConfig()
     self.db.interruptSpell = type(self.db.interruptSpell) == "string" and self.db.interruptSpell or "AUTO"
     if self.db.interruptSpell == "" then
         self.db.interruptSpell = "AUTO"
+    end
+    if self.db.useMouseoverForFocusMacro == nil then
+        self.db.useMouseoverForFocusMacro = true
+    else
+        self.db.useMouseoverForFocusMacro = self.db.useMouseoverForFocusMacro and true or false
     end
     self.db.announceOnReadyCheck = self.db.announceOnReadyCheck and true or false
     self.db.announceTemplate = type(self.db.announceTemplate) == "string" and self.db.announceTemplate or defaults.announceTemplate
@@ -345,12 +351,23 @@ function Addon:BuildKickMacro()
 end
 
 function Addon:BuildFocusMacro(markerIndex)
-    local index = ClampMarkerIndex(markerIndex or self:GetConfig().markerIndex)
-    local lines = {
-        "/focus [@mouseover, exists][]",
-    }
+    local cfg = self:GetConfig()
+    local index = ClampMarkerIndex(markerIndex or cfg.markerIndex)
+    local useMouseover = cfg.useMouseoverForFocusMacro ~= false
+    local lines = {}
+
+    if useMouseover then
+        lines[#lines + 1] = "/focus [@mouseover, exists][]"
+    else
+        lines[#lines + 1] = "/focus"
+    end
+
     if index > 0 then
-        lines[#lines + 1] = "/tm [@mouseover, exists][] ~" .. tostring(index)
+        if useMouseover then
+            lines[#lines + 1] = "/tm [@mouseover, exists][] ~" .. tostring(index)
+        else
+            lines[#lines + 1] = "/tm ~" .. tostring(index)
+        end
     end
 
     return table.concat(lines, "\n")
@@ -378,6 +395,39 @@ local function UpsertMacro(name, icon, body, isCharacterSpecific)
     end
 
     return false, "Failed to create macro"
+end
+
+local function MacroExists(name)
+    if type(GetMacroIndexByName) ~= "function" then
+        return false
+    end
+
+    local index = GetMacroIndexByName(name)
+    return type(index) == "number" and index > 0
+end
+
+function Addon:KickMacroExists()
+    return MacroExists(KICK_MACRO_NAME)
+end
+
+function Addon:FocusMacroExists()
+    return MacroExists(FOCUS_MACRO_NAME)
+end
+
+function Addon:GetKickMacroActionLabel()
+    if self:KickMacroExists() then
+        return "Update " .. KICK_MACRO_NAME
+    end
+
+    return "Create " .. KICK_MACRO_NAME
+end
+
+function Addon:GetFocusMacroActionLabel()
+    if self:FocusMacroExists() then
+        return "Update " .. FOCUS_MACRO_NAME
+    end
+
+    return "Create " .. FOCUS_MACRO_NAME
 end
 
 function Addon:CreateKickMacro()
