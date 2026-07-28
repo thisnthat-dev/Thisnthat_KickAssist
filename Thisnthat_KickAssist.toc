@@ -1,8 +1,8 @@
-## Interface: 120007
+## Interface: 120007, 120100
 ## Title: Thisnthat Kick Assist
 ## Notes: Standalone kick coordination and macro helper.
 ## Author: Thisnthat
-## Version: 0.5.2
+## Version: 1.0.4
 ## SavedVariables: Thisnthat_KickAssistDB
 ## OptionalDeps: Blizzard_UIDropDownMenu
 
