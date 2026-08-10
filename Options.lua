@@ -72,9 +72,7 @@ local function CreateReadOnlyEditBox(parent, width, height, multiLine)
 
     function edit:SetReadOnlyText(value)
         self._readOnlyText = value or ""
-        self._settingReadOnlyText = true
         self:SetText(self._readOnlyText)
-        self._settingReadOnlyText = false
         self:ClearFocus()
     end
 

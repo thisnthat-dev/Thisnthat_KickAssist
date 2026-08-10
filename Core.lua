@@ -304,11 +304,12 @@ function Addon:GetMarkerTextureTag(index, size)
 end
 
 function Addon:GetMarkerChatTag(index)
-    if ClampMarkerIndex(index) == 0 then
+    local markerIndex = ClampMarkerIndex(index)
+    if markerIndex == 0 then
         return ""
     end
 
-    return "{rt" .. tostring(ClampMarkerIndex(index)) .. "}"
+    return "{rt" .. tostring(markerIndex) .. "}"
 end
 
 function Addon:GetInterruptSpellName()
